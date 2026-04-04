@@ -33,8 +33,10 @@ let assignments = [];
 
 // --- Element Selections ---
 // TODO: Select the assignment form by id 'assignment-form'.
+const form = document.getElementById("assignment-form");
 
 // TODO: Select the assignments table body by id 'assignments-tbody'.
+const tbody = document.getElementById("assignments-tbody");
 
 // --- Functions ---
 
@@ -56,6 +58,19 @@ let assignments = [];
  */
 function createAssignmentRow(assignment) {
   // ... your implementation here ...
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+  <td>${assignment.title}</td>
+  <td>${assignment.due_date}</td>
+  <td>${assignment.description}</td>
+  <td> 
+    <button class="edit-btn" data-id="${assignment.id}">Edit</button>
+    <button class="delete-btn" data-id="${assignment.id}">Delete</button>
+  </td>
+  `;
+
+  return tr;
+
 }
 
 /**
