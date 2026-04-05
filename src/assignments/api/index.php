@@ -67,26 +67,41 @@
 // Allow HTTP methods: GET, POST, PUT, DELETE, OPTIONS.
 // Allow headers: Content-Type, Authorization.
 
+header("Content-Type: application/json");
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
 
 // TODO: Handle preflight OPTIONS request.
 // If the request method is OPTIONS, return HTTP 200 and exit.
 
+if($_SERVER['REQUEST_METHOD'] === 'OPTIONS'){
+    http_response_code(200);
+    exit();
+}
 
 // TODO: Include the shared database connection file.
 // require_once __DIR__ . '/../../common/db.php';
 
+require_once __DIR__ . '/../../common/db.php';
 
 // TODO: Get the PDO database connection.
 // $db = getDBConnection();
 
+$db = getDBConnection();
 
 // TODO: Read the HTTP request method.
 // $method = $_SERVER['REQUEST_METHOD'];
+
+$method = $_SERVER['REQUEST_METHOD'];
 
 
 // TODO: Read and decode the request body for POST and PUT requests.
 // $rawData = file_get_contents('php://input');
 // $data    = json_decode($rawData, true) ?? [];
+
+$rawData = file_get_contents('php://imput');
+$data = json_decode($rawData, true) ?? [];
 
 
 // TODO: Read query parameters.
@@ -95,6 +110,10 @@
 // $assignmentId = $_GET['assignment_id'] ?? null;  // integer assignment id for comments queries
 // $commentId    = $_GET['comment_id']    ?? null;  // integer comment id
 
+$action = $_GET['action'] ?? null;
+$id = $_GET['id'] ?? null;
+$assignmentId = $_GET['assignment_id'] ?? null;
+$commentId = $_GET['comment_id'] ?? null;
 
 // ============================================================================
 // ASSIGNMENT FUNCTIONS
@@ -139,7 +158,43 @@ function getAllAssignments(PDO $db): void
     // $row['files'] = json_decode($row['files'], true) ?? [];
 
     // TODO: Call sendResponse(['success' => true, 'data' => $assignments]);
-}
+
+    $query = "SELECT id, title, description, due_date, files, created_at, updated_at FROM assignmnets";
+    $params = [];
+
+    
+    if(!empty ($_GET['search'])){
+        $query .= "WHERE title LIKE : search OR description LIKE : search";
+        $params[':search'] = "%" . $_GET['search'] . "%";
+    }
+
+    $allowedSort = ['title','due_date','created_at'];
+    $sort = $_GET['sort'] ?? 'due_date';
+    if(!in_array($sort,$allowedSort)){
+        $sort= 'due_date';
+    }
+
+    $order = strtolower($_GET['order'] ?? 'asc');
+    if (!in_array($order, ['asc','desc'])){
+        $order = 'asc';
+    }
+
+    $query .= " ORDER BY $sort $order";
+
+    $stmt = $db->prepare($query);
+    $stmt ->execute($params);
+
+    $assignments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($assignments as &$a){
+        $a['files'] = json_decode($a['files'],true) ?? [];
+    }
+
+    sendResponse([
+        "success" => true,
+        "data" => $assignments
+    ]);
+    }
 
 
 /**
@@ -156,14 +211,31 @@ function getAssignmentById(PDO $db, $id): void
     // TODO: Validate that $id is provided and numeric.
     // If not, call sendResponse with HTTP 400.
 
+    if(!is_numeric($id)) sendResponse(["success"=>false,"message"=>"Invalid ID"],400);
+
     // TODO: SELECT id, title, description, due_date, files,
     //       created_at, updated_at FROM assignments WHERE id = ?
 
+    $stmt = $db->prepare("SELECT id, title, description,due_date, files, created_at, updated_at FROM assignments WHERE id=?");
+    $stmt->execute([$id]);
     // TODO: Fetch one row. Decode the files JSON:
     // $assignment['files'] = json_decode($assignment['files'], true) ?? [];
 
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
     // TODO: If found, sendResponse success with the assignment.
     // If not found, sendResponse error with HTTP 404.
+    if(!$assignment){
+        sendResponse(["success"=>false,"message"=>"Assignment not found"],404);
+
+    }
+    $assignment['files']=json_decode($assignment['files'],true) ?? [];
+    sendResponse([
+        "success"=> true,
+        "data"=>$assignment
+    ]);
+
+
+
 }
 
 
@@ -422,6 +494,10 @@ function sendResponse(array $data, int $statusCode = 200): void
     // TODO: http_response_code($statusCode);
     // TODO: echo json_encode($data, JSON_PRETTY_PRINT);
     // TODO: exit;
+
+    http_response_code($status);
+    echo json_encode($data);
+    exit();
 }
 
 
