@@ -38,6 +38,7 @@ const form = document.getElementById("assignment-form");
 // TODO: Select the assignments table body by id 'assignments-tbody'.
 const tbody = document.getElementById("assignments-tbody");
 
+const submitBtn = documet.getElementById("add-assignment");
 // --- Functions ---
 
 /**
@@ -84,6 +85,10 @@ function createAssignmentRow(assignment) {
  */
 function renderTable() {
   // ... your implementation here ...
+  tbody.innerHTML ="";
+  assignments.forEach(assignment =>{
+    tbody.appendChild(createAssignmentRow(assignment));
+  });
 }
 
 /**
@@ -112,6 +117,33 @@ function renderTable() {
  */
 async function handleAddAssignment(event) {
   // ... your implementation here ...
+  event.preventDefault();
+  const title = document.getElementById("assignment-title").value;
+  const description = document.getElementById("assignment-description").value;
+  const files = document
+    .getElementById("assigment-files")
+    .value.split("\n")
+    .filter(f => f.trim() !== "");
+  
+  const editId = submitBtn.dataset.editId;
+
+  if(editId){
+    await handleUpdateAssignment(editId,{title, description, due_date, files});
+    return;
+  }
+  const res = await fetch("./api/index.php", {
+    method:"POST",
+    headers: {"Content-Type":"application/json"},
+    body:JSON.stringify({title, description, due_date, files})
+  });
+
+  const result = await res.json();
+
+  if(result.success){
+    assignments.push({id: result.id, title, description, due_date, files});
+    renderTable();
+    form.reset();
+  }
 }
 
 /**
@@ -133,6 +165,25 @@ async function handleAddAssignment(event) {
  */
 async function handleUpdateAssignment(id, fields) {
   // ... your implementation here ...
+  const res = await fetch("./api/index.php",{
+    method:"PUT",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id, ... fields })
+
+  });
+
+  const result= await res.json();
+
+  if(result.success){
+    const index = assignments.findIndex(a => a.id == id);
+    assignments[index] = {id, ... fields };
+
+    renderTable();
+    form.reset();
+
+    submitBtn.textContent = "Add Assignment";
+    delete submitBtn.dataset.editId;
+  }
 }
 
 /**
@@ -160,6 +211,28 @@ async function handleUpdateAssignment(id, fields) {
  */
 async function handleTableClick(event) {
   // ... your implementation here ...
+  const id = event.target.dataset.id;
+
+  if(event.target.classList.contains("delete-btn")){
+    const res = await fetch(`./api/index.php?id=${id}`, { method: "DELETE"});
+    const reset = await res.json();
+
+    if(result.success){
+      assignments = assignments.filter(a=> a.id != id);
+      renderTable();
+    }
+  }
+
+  if(event.target.classList.contains("edit-btn")){
+    const a = assignments.find(x => x.id == id);
+    document.getElementById("assignment-title").value= a.title;
+    document.getElementById("assignment-description").value = a.description;
+    document.getElementById("assignment-due-date").value = a.due_date;
+    document.getElementById("assignment-files").value = a.files.join("\n");
+
+    submitBtn.textContent= "Update Assignment";
+    submitBtn.dataset.editId = id;
+  }
 }
 
 /**
@@ -177,6 +250,17 @@ async function handleTableClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
+  const res = await fetch(".api/index.php");
+  const result = await res.json();
+
+  if(result.success){
+    assignments= result.data;
+    renderTable();
+  }
+
+  form.addEventListener("submit", handleAddAssignment);
+  tbody.addEventListener("click", handleTableClick);
+
 }
 
 // --- Initial Page Load ---
