@@ -433,6 +433,25 @@ function deleteAssignment(PDO $db, $id): void
 
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
+    if(!$id || !is_numeric($id)){
+        sendResponse(["success"=>false,"message"=>"Invalid ID"],400);
+    }
+
+    $stmt = $db->prepare("SELECT id FROM assignments WHERE id = ?");
+    $stmt->execute([$id]);
+
+    if(!$stmt->fetch()){
+        sendResponse(["success"=>false,"message"=>"Assignment not found"],404);
+    }
+
+    $stmt = $db->prepare("DELETE FROM assignments WHERE id =?");
+    $stmt->execute([$id]);
+
+    if($stmt->rowCount()>0){
+        sendResponse(["success"=>true],200);
+    }
+
+    sendResponse(["success"=>false,"message"=>"Delete failed"],500);
 }
 
 
@@ -461,6 +480,18 @@ function getCommentsByAssignment(PDO $db, $assignmentId): void
 
     // TODO: Fetch all rows. Return sendResponse with the array
     //       (empty array is valid).
+    if(!$assignmentId || !is_numeric($assignmentId)){
+        sendResponse(["success"=>false,"message"=>"Invalid assignment ID"],400);
+    }
+
+    $stmt = $dn-prepare("SELECT id,assignment_id,author,text,created_at FROM comments_assignment
+        WHERE assignment_id = ? ORDER BY created_at ASC");
+    
+    $stmt->execute([$assignmentId]);
+
+    $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    sendResponse(["success"=>true,"data"=>$comments]);
 }
 
 
@@ -493,6 +524,35 @@ function createComment(PDO $db, array $data): void
     // TODO: If rowCount() > 0, sendResponse HTTP 201 with the new id
     //       and the full new comment object.
     // Otherwise sendResponse HTTP 500.
+
+    if(empty($data['assignment_id'])|| empty(trim($data['author']??''))|| empty(trim($data['text']??''))){
+        sendResponse(["success"=>false,"message"=>"Missing fields"],400);
+    }
+
+    $assignment_id=$data['assignment_id'];
+    $author = trim($data['author']);
+    $text = trim($data['text']);
+
+    if(!is_numeric($assignment_id)){
+        sendResponse(["success"=>false,"message"=>"Invalid assignment ID"],400);
+    }
+
+    $stmt = $db->prepare("SELECT id FROM assignments WHERE id = ?");
+    $stmt->execute([$assignment_id]);
+
+    if(!$stmt->fetch()){
+        sendResponse(["success"=>false,"message"=>"Assignment not found"], 404);
+    }
+    $stmt = $db->prepare("INSERT INTO comments_assignment(assignment_id,author,text) VALUES(?,?,?)");
+
+    $success = $stmt->execute([$assignment_id,$author,$text]);
+
+    if($success){
+        sendResponse(["success"=>true,"id"=>$db->lastInsertId(),"data"=>[
+            "assignment_id"=>$assignment_id,"author"=>$author,"text"=>$text
+        ]],201);
+    }
+    sendResponse(["success"=>false,"message"=>"Insert failed"],500);
 }
 
 
@@ -515,6 +575,26 @@ function deleteComment(PDO $db, $commentId): void
 
     // TODO: If rowCount() > 0, sendResponse HTTP 200.
     // Otherwise sendResponse HTTP 500.
+
+    if(!$commentId || !is_numeric($commentId)){
+        sendResponse(["success"=>false,"message"=>"Invalid comment ID"],400);
+    }
+
+    $stmt = $db->prepare("SELECT id FROM comments_assignment WHERE id = ?");
+    $stmt->execute([$commentId]);
+
+    if(!$stmt->fetch()){
+        sendResponse(["success"=>false,"message"=>"Comment not found"],404);
+    }
+
+    $stmt= $db->prepare("DELETE FROM comments_assignment WHERE id = ?");
+    $stmt->execute([$commentId]);
+
+    if($stmt->rowCount()>0){
+        sendResponse(["success"=> true],200);
+    }
+
+    sendResponse(["success" => false,"message"=>"Delete failed"],500);
 }
 
 
@@ -534,6 +614,12 @@ try {
 
         // no parameters → all assignments (supports ?search, ?sort, ?order)
         // TODO: else call getAllAssignments($db)
+        if($action === 'comments'){
+            getCommentsByAssignment($db,$assignmentId);
+        }
+        elseif($id){getAssignmentById($db,$id);}
+        else{getAllAssignments($db);}
+        
 
     } elseif ($method === 'POST') {
 
@@ -542,11 +628,14 @@ try {
 
         // no action → create a new assignment
         // TODO: else call createAssignment($db, $data)
+        if($action === 'comment'){createComment($db,$data);}
+        else{createAssignment($db,$data);}
 
     } elseif ($method === 'PUT') {
 
         // Update an assignment; id comes from the JSON body
         // TODO: call updateAssignment($db, $data)
+        updateAssignment($db,$data);
 
     } elseif ($method === 'DELETE') {
 
@@ -555,18 +644,25 @@ try {
 
         // ?id={id} → delete an assignment (and its comments via CASCADE)
         // TODO: else call deleteAssignment($db, $id)
+        if($action === 'delete_comment'){deleteComment($db,$commentId);}
+        else{deleteAssignment($db,$id);}
 
     } else {
         // TODO: sendResponse HTTP 405 Method Not Allowed.
+        sendResponse(["success"=>false,"message"=>"Method Not Allowed"],405);
     }
 
 } catch (PDOException $e) {
     // TODO: Log the error with error_log().
     // Return a generic HTTP 500 — do NOT expose $e->getMessage() to clients.
+    error_log($e->getMessage());
+    sendResponse(["success"=>false,"message"=>"Internal server error"],500);
 
 } catch (Exception $e) {
     // TODO: Log the error with error_log().
     // Return HTTP 500 using sendResponse().
+    error_log($e->getMessage());
+    sendResponse(["success"=>false,"message"=>"Internal server error"],500);
 }
 
 
@@ -602,6 +698,8 @@ function validateDate(string $date): bool
 {
     // TODO: $d = DateTime::createFromFormat('Y-m-d', $date);
     // TODO: return $d && $d->format('Y-m-d') === $date;
+    $d = DateTime::createFromFormat('Y-m-d',$date);
+    return $d && $d->format('Y-m-d') === $date;
 }
 
 
@@ -614,4 +712,6 @@ function validateDate(string $date): bool
 function sanitizeInput(string $data): string
 {
     // TODO: return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
+
+    return htmlspecialchars(strip_tags(trim($data)),ENT_QUOTES,'UTF-8');
 }
