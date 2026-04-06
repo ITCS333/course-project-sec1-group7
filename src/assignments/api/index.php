@@ -275,6 +275,37 @@ function createAssignment(PDO $db, array $data): void
     // TODO: If rowCount() > 0, sendResponse HTTP 201 with the new integer id
     // from $db->lastInsertId().
     // Otherwise sendResponse HTTP 500.
+    if (empty($data['title'])|| empty($data['description'])||empty($data['due_date'])){
+        sendResponse(["success"=>false,"message"=>"Missing fields"],400);
+    }
+
+    $title = trim($data['title']);
+    $description = trim($data['description']);
+    $due_date = trim($data['due_date']);
+
+    $dataObj = DateTime::createFromFormat('Y-m-d',$due_date);
+    if(!$dataObj || $dataObj->format('Y-m-d') !== $due_date){
+        sendResponse(['success'=>false,"message"=>"Invalid date format"], 400);
+    }
+    $files = (isset($data['files'])&& is_array($data['files']))
+        ? json_encode($data['files'])
+        : json_encode([]);
+    
+    $stmt = $db->prepare("INSERT INTO assignments(title,description,due_date, files) VALUES (?,?,?,?)");
+
+    $success = $stmt->execute([$title,$description,$due_date,$files]);
+
+    if($success){
+        sendResponse([
+            "success"=>true,
+            "id"=>$db->lastInsertId()
+        ],201);
+    }
+
+    sendResponse([
+        "success"=>false,
+        "message"=>"Insert failed"
+    ],500);
 }
 
 
@@ -315,7 +346,67 @@ function updateAssignment(PDO $db, array $data): void
     // Prepare, bind all SET values, then bind id, and execute.
 
     // TODO: sendResponse HTTP 200 on success, HTTP 500 on failure.
-}
+
+    if(empty($data['id'])){
+        sendResponse(["success"=>false,"mesaage"=>"Id is required"],400);
+    }
+    $id=$data['id'];
+
+    $stmt = $db->prepare("SELECT id FROM assignments WHERE id = ?");
+    $stmt->execute([$id]);
+
+    if(!$stmt->fetch()){
+        sendResponse(["success"=>false,"message"=>"Assignment not found"],404);
+    }
+
+    $fields=[];
+    $values=[];
+
+    if(isset($data['title'])){
+        $fields[]="title = ?";
+        $values[]=trim($data['title']);
+    }
+
+    if(isset($data['description'])){
+        $fields[] = "description = ?";
+        $values[]=trim($data['description']);
+    }
+
+    if(isset($data['due_date'])){
+        $due_date = trim($data['due_date']);
+
+        $dataObj = DateTime::createFromFormat('Y-m-d',$due_date);
+        if(!$dataObj||$dataObj->format('Y-m-d')!== $due_date){
+            sendResponse(["success"=>false,"message"=>"Invalid date"],400);
+        }
+
+        $fields[]="due_date = ?";
+        $values[]=$due_date;
+    }
+
+    if(isset($data['files'])){
+        $fields[]="files = ?";
+        $values[]=json_encode($data['files']);
+    }
+
+    if(empty($fields)){
+        sendResponse(["success"=>false,"message"=>"No fields to update"],400);
+    }
+
+    $values[]=$id;
+
+    $sql = "UPDATE assignments SET " . implode(", ", $fields) . "WHERE id = ?";
+    $stmt = $db->prepare($sql);
+
+    if($stmt->execute($values)){
+        sendResponse(["success"=true],200);
+    }
+
+    sendResponse(["success"=>false,"message"=>"Update failed"],500);
+
+
+
+    }
 
 
 /**
