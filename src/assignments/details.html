@@ -10,10 +10,14 @@
 <head>
     <!-- TODO: Add <meta> tags for charset (UTF-8) and viewport
          (width=device-width, initial-scale=1.0). -->
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- TODO: Add a <title>, e.g., "Assignment Details". -->
+     <title>Assignment Details</title>
 
     <!-- TODO: Link to your CSS framework or stylesheet. -->
+     <link rel="stylesheet" href="styles.css">
 
     <!-- Required: link details.js with defer. -->
     <script src="details.js" defer></script>
@@ -98,5 +102,35 @@
         <!-- End of <section#discussion-forum> -->
 
     <!-- End of <main> -->
+     <header><h1 id="assignment-title"></h1></header>
+     <main>
+          <article>
+               <p id="assignment-due-date"></p>
+
+               <h2>Description</h2>
+               <p id="assignment-description"></p>
+
+               <h2>Attached Files & Links</h2>
+               <u1 id="assignment-files-list"></u1>
+          </article>
+
+          <section id="discussion-forum">
+               <h2>Questions & Discussion</h2>
+
+               <div id="comment-list"></div>
+
+               <form id="comment-form">
+                    <fieldset>
+                         <legend>Ask a Quastion</legend>
+
+                         <label for="new-comment">Your Comment:</label>
+                         <textarea id="new-comment" required></textarea>
+
+                         <button type="submit">Post Comment</button>
+                    </fieldset>
+               </form>
+          </section>
+
+     </main>
 </body>
 </html>
