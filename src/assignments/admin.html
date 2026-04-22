@@ -10,13 +10,17 @@
 <html lang="en">
 <head>
     <!-- TODO: Add the <meta> tag for character encoding (UTF-8). -->
+     <meta charset="UTF-8">
 
     <!-- TODO: Add the responsive viewport <meta> tag
          (width=device-width, initial-scale=1.0). -->
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- TODO: Add a <title>, e.g., "Manage Assignments". -->
+     <title>Manage Assignments</title>
 
     <!-- TODO: Link to your CSS framework or stylesheet. -->
+     <link rel="stylesheet" href="styles.css">
 
     <!-- Required: link admin.js with defer. -->
     <script src="admin.js" defer></script>
@@ -24,6 +28,9 @@
 <body>
 
     <!-- TODO: Create a <header> containing an <h1> "Manage Assignments". -->
+     <header>
+          <h1>Manage Assignments</h1>
+     </header>
 
     <!-- TODO: Create the <main> content area. -->
 
@@ -117,5 +124,46 @@
         <!-- End of list <section> -->
 
     <!-- End of <main> -->
+     <main>
+          <section>
+               <h2>Add a New Assignment</h2>
+               <form id="assignment-form">
+                    <fieldset>
+                         <legend>Assignment details</legend>
+
+                         <label for="assignment-title">Title:</label>
+                         <input id="assignment-title" type="text" required>
+
+                         <label for="assignment-description">Description:</label>
+                         <textarea id="assignment-description" rows="5" required></textarea>
+
+                         <label for="assignment-due-date">Due Date:</label>
+                         <input id="assignment-due-date" type="date" required>
+
+                         <label for="assignment-files">Files (one per line):</label>
+                         <textarea id="assignment-files" rows="3"></textarea>
+
+                         <button id="add-assignment" type="submit">Add Assignment</button>
+                    </fieldset>
+               </form>
+          </section>
+          <section>
+               <h2>Current Assignments</h2>
+
+               <table id="assignments-table" border="1">
+                    <thead>
+                         <tr>
+                              <th>Title</th>
+                              <th>Due Date</th>
+                              <th>Description</th>
+                              <th>Actions</th>
+                         </tr>
+                    </thead>
+
+                    <tbody id="assignments-tbody"></tbody>
+
+               </table>
+          </section>
+     </main>
 </body>
 </html>
