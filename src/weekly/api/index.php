@@ -45,7 +45,20 @@ function sanitize($str) {
 // ================= WEEKS =================
 
 function getAllWeeks($db) {
-    $stmt = $db->query("SELECT * FROM weeks ORDER BY start_date ASC");
+
+    $query = "SELECT * FROM weeks";
+    $params = [];
+
+    if (!empty($_GET['search'])) {
+        $query .= " WHERE LOWER(title) LIKE :search OR LOWER(description) LIKE :search";
+        $params[':search'] = "%" . strtolower($_GET['search']) . "%";
+    }
+
+    $query .= " ORDER BY start_date ASC";
+
+    $stmt = $db->prepare($query);
+    $stmt->execute($params);
+
     $weeks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     foreach ($weeks as &$w) {
@@ -55,19 +68,27 @@ function getAllWeeks($db) {
     sendResponse(['success' => true, 'data' => $weeks]);
 }
 
+
 function getWeekById($db, $id) {
-    if (!is_numeric($id)) sendResponse(['success' => false], 400);
+
+    if (!is_numeric($id)) {
+        sendResponse(['success' => false], 400);
+    }
 
     $stmt = $db->prepare("SELECT * FROM weeks WHERE id=?");
     $stmt->execute([$id]);
+
     $week = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if (!$week) sendResponse(['success' => false], 404);
+    if (!$week) {
+        sendResponse(['success' => false], 404);
+    }
 
     $week['links'] = json_decode($week['links'], true) ?? [];
 
     sendResponse(['success' => true, 'data' => $week]);
 }
+
 
 function createWeek($db, $data) {
 
@@ -92,6 +113,7 @@ function createWeek($db, $data) {
         'id' => $db->lastInsertId()
     ], 201);
 }
+
 
 function updateWeek($db, $data) {
 
@@ -145,9 +167,12 @@ function updateWeek($db, $data) {
     sendResponse(['success' => true]);
 }
 
+
 function deleteWeek($db, $id) {
 
-    if (!is_numeric($id)) sendResponse(['success' => false], 400);
+    if (!is_numeric($id)) {
+        sendResponse(['success' => false], 400);
+    }
 
     $check = $db->prepare("SELECT id FROM weeks WHERE id=?");
     $check->execute([$id]);
@@ -167,7 +192,9 @@ function deleteWeek($db, $id) {
 
 function getCommentsByWeek($db, $weekId) {
 
-    if (!is_numeric($weekId)) sendResponse(['success' => false], 400);
+    if (!is_numeric($weekId)) {
+        sendResponse(['success' => false], 400);
+    }
 
     $stmt = $db->prepare("SELECT * FROM comments_week WHERE week_id=? ORDER BY created_at ASC");
     $stmt->execute([$weekId]);
@@ -175,10 +202,19 @@ function getCommentsByWeek($db, $weekId) {
     sendResponse(['success' => true, 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)]);
 }
 
+
 function createComment($db, $data) {
 
     if (empty($data['week_id']) || empty($data['author']) || empty($data['text'])) {
         sendResponse(['success' => false], 400);
+    }
+
+    // ✅ FIX: check week exists
+    $check = $db->prepare("SELECT id FROM weeks WHERE id=?");
+    $check->execute([$data['week_id']]);
+
+    if (!$check->fetch()) {
+        sendResponse(['success' => false], 404);
     }
 
     $stmt = $db->prepare("INSERT INTO comments_week(week_id,author,text) VALUES(?,?,?)");
@@ -188,10 +224,13 @@ function createComment($db, $data) {
         sanitize($data['text'])
     ]);
 
+    $id = $db->lastInsertId();
+
     sendResponse([
         'success' => true,
-        'id' => $db->lastInsertId(),
+        'id' => $id,
         'data' => [
+            'id' => $id,
             'week_id' => $data['week_id'],
             'author' => $data['author'],
             'text' => $data['text']
@@ -199,9 +238,20 @@ function createComment($db, $data) {
     ], 201);
 }
 
+
 function deleteComment($db, $commentId) {
 
-    if (!is_numeric($commentId)) sendResponse(['success' => false], 400);
+    if (!is_numeric($commentId)) {
+        sendResponse(['success' => false], 400);
+    }
+
+    // ✅ FIX: check existence first (important for 404 test)
+    $check = $db->prepare("SELECT id FROM comments_week WHERE id=?");
+    $check->execute([$commentId]);
+
+    if (!$check->fetch()) {
+        sendResponse(['success' => false], 404);
+    }
 
     $stmt = $db->prepare("DELETE FROM comments_week WHERE id=?");
     $stmt->execute([$commentId]);
