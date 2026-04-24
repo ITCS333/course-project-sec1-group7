@@ -61,13 +61,13 @@ function createAssignmentRow(assignment) {
   // ... your implementation here ...
   const tr=document.createElement("tr");
   tr.innerHTML=`
-  <td>${assignment.title}</td>
-  <td>${assignment.due_date}</td>
-  <td>${assignment.description}</td>
-  <td> 
-    <button class="edit-btn" data-id="${assignment.id}">Edit</button>
-    <button class="delete-btn" data-id="${assignment.id}">Delete</button>
-  </td>
+    <td>${assignment.title}</td>
+    <td>${assignment.due_date}</td>
+    <td>${assignment.description}</td>
+    <td> 
+      <button class="edit-btn" data-id="${assignment.id}">Edit</button>
+      <button class="delete-btn" data-id="${assignment.id}">Delete</button>
+    </td>
   `;
 
   return tr;
@@ -250,8 +250,8 @@ async function handleTableClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
-  const res=await fetch(".api/index.php");
-  const result=await res.json();
+  const response=await fetch(".api/index.php");
+  const result=await response.json();
 
   if(result.success){
     assignments=result.data;
