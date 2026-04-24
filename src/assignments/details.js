@@ -171,20 +171,20 @@ async function handleAddComment(event) {
   // ... your implementation here ...
   event.preventDefault();
 
-  const text = newCommentInput.ariaValueMax.trim();
+  const text = newCommentInput.value.trim();
   if(!text) return;
 
-  const res = await fetch("./api/index.php?action=comment",{
+  const response = await fetch("./api/index.php?action=comment",{
     method:"POST",
     headers: {"Content-Type":"application/json"},
     body: JSON.stringify({
       assignment_id: currentAssignmentId,
       author: "Student",
-      text
+      text: text
     })
   });
 
-  const result = await res.json();
+  const result = await response.json();
 
   if (result.success){
     currentComments.push(result.data);
