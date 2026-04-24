@@ -98,7 +98,7 @@ function renderAssignmentDetails(assignment) {
   assignmentDescription.textContent = assignment.description;
 
   assignmentFilesList.innerHTML = "";
-  assignment.files.forEach(f =>{
+  (assignment.files || []).forEach(f =>{
     const li = document.createElement("li");
     li.innerHTML = `<a href="${f}">${f}</a>`;
     assignmentFilesList.appendChild(li);
