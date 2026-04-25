@@ -233,28 +233,43 @@ async function handleUpdateAssignment(id, fields) {
  */
 async function handleTableClick(event) {
   // ... your implementation here ...
-  const id=event.target.dataset.id;
+   const submitBtn = document.getElementById("add-assignment");
 
-  if(event.target.classList.contains("delete-btn")){
-    const res=await fetch(`./api/index.php?id=${id}`, { method: "DELETE"});
-    const result=await res.json();
+    const id = event.target.dataset.id;
 
-    if(result.success){
-      assignments=assignments.filter(a=> a.id != id);
-      renderTable();
+    if (!id) return;
+
+    // DELETE
+    if (event.target.classList.contains("delete-btn")) {
+        const response = await fetch(`./api/index.php?id=${id}`, {
+            method: "DELETE"
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            assignments = assignments.filter(a => a.id != id);
+            renderTable();
+        }
     }
-  }
 
-  if(event.target.classList.contains("edit-btn")){
-    const a=assignments.find(x => x.id == id);
-    document.getElementById("assignment-title").value=a.title;
-    document.getElementById("assignment-description").value=a.description;
-    document.getElementById("assignment-due-date").value=a.due_date;
-    document.getElementById("assignment-files").value=a.files.join("\n");
+    // EDIT
+    if (event.target.classList.contains("edit-btn")) {
+        const assignment = assignments.find(a => a.id == id);
 
-    submitBtn.textContent= "Update Assignment";
-    submitBtn.dataset.editId = id;
-  }
+        if (!assignment) return;
+
+        document.getElementById("assignment-title").value = assignment.title;
+        document.getElementById("assignment-due-date").value = assignment.due_date;
+        document.getElementById("assignment-description").value = assignment.description;
+        document.getElementById("assignment-files").value =
+            (assignment.files || []).join("\n");
+
+        if (submitBtn) {
+            submitBtn.textContent = "Update Assignment";
+            submitBtn.dataset.editId = id;
+        }
+    }
 }
 
 /**
@@ -272,17 +287,24 @@ async function handleTableClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
-  const form=document.getElementById("assignment-form");
-  const tbody=document.getElementById("assignment-tbody");
-  const response=await fetch("./api/index.php");
-  const result=await response.json();
+  const form = document.getElementById("assignment-form");
+    const tbody = document.getElementById("assignments-tbody");
 
-  if(result.success){
-    assignments=result.data;
-    renderTable();
-  }
-  if(form){form.addEventListener("submit", handleAddAssignment);}
-  if(tbody){tbody.addEventListener("click", handleTableClick);}
+    const response = await fetch("./api/index.php");
+    const result = await response.json();
+
+    if (result.success) {
+        assignments = result.data;
+        renderTable();
+    }
+
+    if (form) {
+        form.addEventListener("submit", handleAddAssignment);
+    }
+
+    if (tbody) {
+        tbody.addEventListener("click", handleTableClick);
+    }
 
 }
 
