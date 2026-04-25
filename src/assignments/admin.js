@@ -119,11 +119,13 @@ async function handleAddAssignment(event) {
   // ... your implementation here ...
   event.preventDefault();
   const title=document.getElementById("assignment-title").value;
+  const due_date=document.getElementById("assignment-due-date").value;
   const description=document.getElementById("assignment-description").value;
   const files=document
     .getElementById("assigment-files")
-    .value.split("\n")
-    .filter(f => f.trim() !== "");
+    .value
+    .split("\n")
+    .filter(file => file.trim() !== "");
   
   const editId = submitBtn.dataset.editId;
 
@@ -131,16 +133,16 @@ async function handleAddAssignment(event) {
     await handleUpdateAssignment(editId,{title, description, due_date, files});
     return;
   }
-  const res=await fetch("./api/index.php", {
+  const response=await fetch("./api/index.php", {
     method:"POST",
     headers: {"Content-Type":"application/json"},
-    body:JSON.stringify({title, description, due_date, files})
+    body:JSON.stringify({title,due_date,description,files})
   });
 
-  const result=await res.json();
+  const result=await response.json();
 
   if(result.success){
-    assignments.push({id: result.id, title, description, due_date, files});
+    assignments.push({id: result.id,title,due_date,description,files});
     renderTable();
     form.reset();
   }
