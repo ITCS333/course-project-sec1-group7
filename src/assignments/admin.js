@@ -121,34 +121,48 @@ function renderTable() {
 async function handleAddAssignment(event) {
   // ... your implementation here ...
   event.preventDefault();
-  const title=document.getElementById("assignment-title").value;
-  const due_date=document.getElementById("assignment-due-date").value;
-  const description=document.getElementById("assignment-description").value;
-  const files=document
-    .getElementById("assignment-files")
-    .value
-    .split("\n")
-    .filter(file => file.trim() !== "");
-  
-  const editId = submitBtn.dataset.editId;
+  const titleInput=document.getElementById("assignment-title");
+  const dueDateInput=document.getElementById("assignment-due-date");
+  const descriptionInput=document.getElementById("assignment-description");
+  const filesInput=document.getElementById("assignment-files");
+  const submitBtn=document.getElementById("add-assignment");
+  const form=document.getElementById("assignment-form");
 
-  if(editId){
-    await handleUpdateAssignment(editId,title,due_date,description,files);
+  if(!titleInput ||!dueDateInput||!descriptionInput||!filesInput||!submitBtn||!form){
     return;
   }
-  const response=await fetch("./api/index.php", {
+
+  const title=titleInput.value.trim();
+  const due_date=dueDateInput.value.trim();
+  const description=descriptionInput.value.trim();
+
+  const files= filesInput.value.split("\n").filter(file=>file.trim() !=="");
+  const editId=submitBtn.dataset.editId;
+
+  if(editId){
+    await handleUpdateAssignment(editId,{title,due_date,description,files});
+    return;
+  }
+
+  const response=await fetch("./api/index.php",{
     method:"POST",
-    headers: {"Content-Type":"application/json"},
+    headers:{
+      "Content-Type":"application/json"
+    },
     body:JSON.stringify({title,due_date,description,files})
   });
 
   const result=await response.json();
 
   if(result.success){
-    assignments.push({id: result.id,title,due_date,description,files});
+    assignments.push({id:result.id,title,due_date,description,files});
     renderTable();
     form.reset();
+
   }
+    
+  
+ 
 }
 
 /**
