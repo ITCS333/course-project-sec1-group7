@@ -85,7 +85,7 @@ function createAssignmentRow(assignment) {
  */
 function renderTable() {
   // ... your implementation here ...
-  const tbody=document.getElementById("assignment-tbody");
+  const tbody=document.getElementById("assignments-tbody");
   if (!tbody)return;
 
   tbody.innerHTML="";
@@ -125,7 +125,7 @@ async function handleAddAssignment(event) {
   const due_date=document.getElementById("assignment-due-date").value;
   const description=document.getElementById("assignment-description").value;
   const files=document
-    .getElementById("assigment-files")
+    .getElementById("assignment-files")
     .value
     .split("\n")
     .filter(file => file.trim() !== "");
@@ -133,7 +133,7 @@ async function handleAddAssignment(event) {
   const editId = submitBtn.dataset.editId;
 
   if(editId){
-    await handleUpdateAssignment(editId,{title, description, due_date, files});
+    await handleUpdateAssignment(editId,title,due_date,description,files);
     return;
   }
   const response=await fetch("./api/index.php", {
@@ -220,7 +220,7 @@ async function handleTableClick(event) {
 
   if(event.target.classList.contains("delete-btn")){
     const res=await fetch(`./api/index.php?id=${id}`, { method: "DELETE"});
-    const reset=await res.json();
+    const result=await res.json();
 
     if(result.success){
       assignments=assignments.filter(a=> a.id != id);
@@ -257,7 +257,7 @@ async function loadAndInitialize() {
   // ... your implementation here ...
   const form=document.getElementById("assignment-form");
   const tbody=document.getElementById("assignment-tbody");
-  const response=await fetch(".api/index.php");
+  const response=await fetch("./api/index.php");
   const result=await response.json();
 
   if(result.success){
