@@ -33,12 +33,12 @@ let assignments=[];
 
 // --- Element Selections ---
 // TODO: Select the assignment form by id 'assignment-form'.
-const form=document.getElementById("assignment-form");
+
 
 // TODO: Select the assignments table body by id 'assignments-tbody'.
-const tbody=document.getElementById("assignments-tbody");
 
-const submitBtn=documet.getElementById("add-assignment");
+
+
 // --- Functions ---
 
 /**
@@ -85,6 +85,7 @@ function createAssignmentRow(assignment) {
  */
 function renderTable() {
   // ... your implementation here ...
+  const tbody=document.getElementById("assignment-tbody");
   tbody.innerHTML="";
   assignments.forEach(assignment=>{
     tbody.appendChild(createAssignmentRow(assignment));
@@ -252,6 +253,8 @@ async function handleTableClick(event) {
  */
 async function loadAndInitialize() {
   // ... your implementation here ...
+  const form=document.getElementById("assignment-form");
+  const tbody=document.getElementById("assignment-tbody");
   const response=await fetch(".api/index.php");
   const result=await response.json();
 
