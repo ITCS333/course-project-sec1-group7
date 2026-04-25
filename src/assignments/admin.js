@@ -184,25 +184,28 @@ async function handleAddAssignment(event) {
  */
 async function handleUpdateAssignment(id, fields) {
   // ... your implementation here ...
-  const res=await fetch("./api/index.php",{
-    method:"PUT",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({id, ... fields })
+    const form = document.getElementById("assignment-form");
+    const submitBtn = document.getElementById("add-assignment");
 
-  });
+    const response = await fetch("./api/index.php", {
+        method: "PUT",headers: {"Content-Type": "application/json"
+        }, body: JSON.stringify({id,...fields})
+    });
 
-  const result= await res.json();
+    const result = await response.json();
 
-  if(result.success){
-    const index=assignments.findIndex(a => a.id == id);
-    assignments[index]={id, ... fields };
+    if (result.success) {
+        const index = assignments.findIndex(a => a.id == id);
 
-    renderTable();
-    form.reset();
+        if (index !== -1) {assignments[index] = {id,...fields};}
+        renderTable();
 
-    submitBtn.textContent="Add Assignment";
-    delete submitBtn.dataset.editId;
-  }
+        if (form) {form.reset();}
+
+        if (submitBtn) {
+            submitBtn.textContent = "Add Assignment";
+            delete submitBtn.dataset.editId;}
+    }
 }
 
 /**
