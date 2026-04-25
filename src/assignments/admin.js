@@ -86,6 +86,8 @@ function createAssignmentRow(assignment) {
 function renderTable() {
   // ... your implementation here ...
   const tbody=document.getElementById("assignment-tbody");
+  if (!tbody)return;
+
   tbody.innerHTML="";
   assignments.forEach(assignment=>{
     tbody.appendChild(createAssignmentRow(assignment));
@@ -262,9 +264,8 @@ async function loadAndInitialize() {
     assignments=result.data;
     renderTable();
   }
-
-  form.addEventListener("submit", handleAddAssignment);
-  tbody.addEventListener("click", handleTableClick);
+  if(form){form.addEventListener("submit", handleAddAssignment);}
+  if(tbody){tbody.addEventListener("click", handleTableClick);}
 
 }
 
