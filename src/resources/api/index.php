@@ -8,10 +8,23 @@ $db = $database->getConnection();
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-$id = $_GET['id'] ?? null;
+$data = json_decode(file_get_contents("php://input"), true);
 
-/* ===== GET ===== */
+$id = $_GET['id'] ?? null;
+$action = $_GET['action'] ?? null;
+$resource_id = $_GET['resource_id'] ?? null;
+
+/* ========= GET ========= */
 if ($method === 'GET') {
+
+    if ($action === 'comments' && $resource_id) {
+        $stmt = $db->prepare("SELECT * FROM comments_resource WHERE resource_id = ? ORDER BY created_at ASC");
+        $stmt->execute([$resource_id]);
+        $comments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        echo json_encode(["success" => true, "data" => $comments]);
+        exit;
+    }
 
     if ($id) {
         $stmt = $db->prepare("SELECT * FROM resources WHERE id = ?");
@@ -19,45 +32,58 @@ if ($method === 'GET') {
         $resource = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if ($resource) {
-            echo json_encode($resource);
+            echo json_encode(["success" => true, "data" => $resource]);
         } else {
             http_response_code(404);
-            echo json_encode(["error" => "Not found"]);
+            echo json_encode(["success" => false]);
         }
-
-    } else {
-        $stmt = $db->query("SELECT * FROM resources ORDER BY created_at DESC");
-        $resources = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        echo json_encode($resources);
+        exit;
     }
+
+    $stmt = $db->query("SELECT * FROM resources ORDER BY created_at DESC");
+    $resources = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode(["success" => true, "data" => $resources]);
 }
 
-/* ===== POST ===== */
+/* ========= POST ========= */
 elseif ($method === 'POST') {
 
-    $data = json_decode(file_get_contents("php://input"), true);
+    if ($action === 'comment') {
 
-    $title = $data['title'] ?? '';
-    $description = $data['description'] ?? '';
-    $link = $data['link'] ?? '';
+        $stmt = $db->prepare("INSERT INTO comments_resource (resource_id, author, text) VALUES (?, ?, ?)");
+        $stmt->execute([
+            $data['resource_id'],
+            $data['author'],
+            $data['text']
+        ]);
 
-    if (!$title || !$link) {
-        http_response_code(400);
-        echo json_encode(["error" => "Missing data"]);
+        $newComment = [
+            "id" => $db->lastInsertId(),
+            "resource_id" => $data['resource_id'],
+            "author" => $data['author'],
+            "text" => $data['text']
+        ];
+
+        echo json_encode(["success" => true, "data" => $newComment]);
         exit;
     }
 
     $stmt = $db->prepare("INSERT INTO resources (title, description, link) VALUES (?, ?, ?)");
-    $stmt->execute([$title, $description, $link]);
+    $stmt->execute([
+        $data['title'],
+        $data['description'],
+        $data['link']
+    ]);
 
-    echo json_encode(["success" => true]);
+    echo json_encode([
+        "success" => true,
+        "id" => $db->lastInsertId()
+    ]);
 }
 
-/* ===== PUT ===== */
+/* ========= PUT ========= */
 elseif ($method === 'PUT') {
-
-    $data = json_decode(file_get_contents("php://input"), true);
 
     $stmt = $db->prepare("UPDATE resources SET title=?, description=?, link=? WHERE id=?");
     $stmt->execute([
@@ -70,12 +96,16 @@ elseif ($method === 'PUT') {
     echo json_encode(["success" => true]);
 }
 
-/* ===== DELETE ===== */
+/* ========= DELETE ========= */
 elseif ($method === 'DELETE') {
 
-    if (!$id) {
-        http_response_code(400);
-        echo json_encode(["error" => "Missing id"]);
+    if ($action === 'delete_comment') {
+        $comment_id = $_GET['comment_id'];
+
+        $stmt = $db->prepare("DELETE FROM comments_resource WHERE id=?");
+        $stmt->execute([$comment_id]);
+
+        echo json_encode(["success" => true]);
         exit;
     }
 
