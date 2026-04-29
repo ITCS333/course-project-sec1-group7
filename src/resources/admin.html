@@ -7,29 +7,51 @@
     <link rel="stylesheet" href="../../styles.css">
     <script src="admin.js" defer></script>
 </head>
-
 <body>
+
     <header>
-        <h1>Manage Resources</h1>
+        <h1>Manage Course Resources</h1>
     </header>
 
     <main>
-        <form id="resource-form">
-            <input type="hidden" id="resource-id">
+        <section>
+            <h2>Add a New Resource</h2>
 
-            <label for="title">Title</label>
-            <input type="text" id="title" required>
+            <form id="resource-form" action="#">
+                <fieldset>
+                    <legend>Resource Details</legend>
 
-            <label for="description">Description</label>
-            <textarea id="description" required></textarea>
+                    <label for="resource-title">Title</label>
+                    <input id="resource-title" type="text" required>
 
-            <label for="link">Link</label>
-            <input type="url" id="link" required>
+                    <label for="resource-description">Description</label>
+                    <textarea id="resource-description"></textarea>
 
-            <button type="submit">Save Resource</button>
-        </form>
+                    <label for="resource-link">Link</label>
+                    <input id="resource-link" type="url" required>
 
-        <section id="admin-resource-list"></section>
+                    <button id="add-resource" type="submit">Add Resource</button>
+                </fieldset>
+            </form>
+        </section>
+
+        <section>
+            <h2>Existing Resources</h2>
+
+            <table id="resources-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Link</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="resources-tbody"></tbody>
+            </table>
+        </section>
     </main>
+
 </body>
 </html>
