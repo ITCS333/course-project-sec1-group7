@@ -21,21 +21,17 @@ function renderResourceDetails(resource) {
 
 function createCommentArticle(comment) {
     const article = document.createElement("article");
-
     article.innerHTML = `
         <p>${comment.text}</p>
         <footer>Posted by: ${comment.author}</footer>
     `;
-
     return article;
 }
 
 function renderComments() {
     commentList.innerHTML = "";
-
     currentComments.forEach(function (comment) {
-        const article = createCommentArticle(comment);
-        commentList.appendChild(article);
+        commentList.appendChild(createCommentArticle(comment));
     });
 }
 
@@ -43,16 +39,11 @@ async function handleAddComment(event) {
     event.preventDefault();
 
     const commentText = newComment.value.trim();
-
-    if (commentText === "") {
-        return;
-    }
+    if (commentText === "") return;
 
     const response = await fetch("./api/index.php?action=comment", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             resource_id: currentResourceId,
             author: "Student",
