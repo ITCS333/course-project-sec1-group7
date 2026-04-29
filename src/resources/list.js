@@ -19,8 +19,7 @@ async function loadResources() {
     resourceListSection.innerHTML = "";
 
     result.data.forEach(function (resource) {
-        const article = createResourceArticle(resource);
-        resourceListSection.appendChild(article);
+        resourceListSection.appendChild(createResourceArticle(resource));
     });
 }
 
