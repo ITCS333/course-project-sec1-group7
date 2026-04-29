@@ -1,13 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     const section = document.getElementById("resource-list-section");
 
-    fetch("api/index.php")
+    fetch("/resources/api/index.php")
         .then(function (response) {
             return response.json();
         })
-        .then(function (result) {
-
-            const data = result.data; // مهم لأن API يرجع { success, data }
+        .then(function (data) {
 
             section.innerHTML = "";
 
