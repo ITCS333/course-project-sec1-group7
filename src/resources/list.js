@@ -1,18 +1,27 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const section = document.getElementById("resource-details-section");
+const resourceListSection = document.querySelector("#resource-list-section");
 
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
+function createResourceArticle(resource) {
+    const article = document.createElement("article");
 
-    fetch(`/resources/api/index.php?id=${id}`)
-        .then(response => response.json())
-        .then(resource => {
+    article.innerHTML = `
+        <h2>${resource.title}</h2>
+        <p>${resource.description}</p>
+        <a href="details.html?id=${resource.id}">View Resource & Discussion</a>
+    `;
 
-            section.innerHTML = `
-                <h2>${resource.title}</h2>
-                <p>${resource.description}</p>
-                <a href="${resource.link}" target="_blank">Open Resource</a>
-            `;
-        })
-        .catch(error => console.error(error));
-});
+    return article;
+}
+
+async function loadResources() {
+    const response = await fetch("./api/index.php");
+    const result = await response.json();
+
+    resourceListSection.innerHTML = "";
+
+    result.data.forEach(function (resource) {
+        const article = createResourceArticle(resource);
+        resourceListSection.appendChild(article);
+    });
+}
+
+loadResources();
