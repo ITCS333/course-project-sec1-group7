@@ -4,13 +4,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
 
-    fetch(`api/index.php?id=${id}`)
+    fetch(`/resources/api/index.php?id=${id}`)
         .then(function (response) {
             return response.json();
         })
-        .then(function (result) {
-
-            const resource = result.data; // مهم
+        .then(function (resource) {
 
             section.innerHTML = `
                 <h2>${resource.title}</h2>
