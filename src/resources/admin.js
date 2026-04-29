@@ -39,9 +39,7 @@ async function handleAddResource(event) {
     if (editId !== null) {
         const response = await fetch("./api/index.php", {
             method: "PUT",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id: editId, title, description, link })
         });
 
@@ -66,9 +64,7 @@ async function handleAddResource(event) {
 
     const response = await fetch("./api/index.php", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, link })
     });
 
