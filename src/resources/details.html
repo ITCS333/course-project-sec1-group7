@@ -7,15 +7,32 @@
     <link rel="stylesheet" href="../../styles.css">
     <script src="details.js" defer></script>
 </head>
-
 <body>
     <header>
-        <h1>Resource Details</h1>
+        <h1 id="resource-title">Resource Details</h1>
     </header>
 
     <main>
-        <section id="resource-details-section">
-            <!-- Resource details will be loaded here -->
+        <article>
+            <p id="resource-description"></p>
+            <a id="resource-link" href="#" target="_blank">Access Resource Material</a>
+        </article>
+
+        <section id="discussion-forum">
+            <h2>Discussion</h2>
+
+            <div id="comment-list"></div>
+
+            <form id="comment-form" action="#">
+                <fieldset>
+                    <legend>Leave a Comment</legend>
+
+                    <label for="new-comment">Comment</label>
+                    <textarea id="new-comment" required></textarea>
+
+                    <button type="submit">Post Comment</button>
+                </fieldset>
+            </form>
         </section>
     </main>
 </body>
