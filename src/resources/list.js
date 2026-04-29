@@ -2,14 +2,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const section = document.getElementById("resource-list-section");
 
     fetch("/resources/api/index.php")
-        .then(function (response) {
-            return response.json();
-        })
-        .then(function (data) {
+        .then(response => response.json())
+        .then(data => {
 
             section.innerHTML = "";
 
-            data.forEach(function (resource) {
+            data.forEach(resource => {
 
                 const article = document.createElement("article");
 
@@ -24,7 +22,5 @@ document.addEventListener("DOMContentLoaded", function () {
                 section.appendChild(article);
             });
         })
-        .catch(function (error) {
-            console.error("Error:", error);
-        });
+        .catch(error => console.error(error));
 });
