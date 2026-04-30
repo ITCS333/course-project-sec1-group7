@@ -1,8 +1,5 @@
-// --- Global Data Store ---
-let resources = [];
+window.resources = [];
 let editingId = null;
-
-// --- Functions ---
 
 function createResourceRow({ id, title, description, link }) {
   const tr = document.createElement('tr');
@@ -21,7 +18,7 @@ function createResourceRow({ id, title, description, link }) {
 function renderTable() {
   const tbody = document.querySelector('#resources-tbody');
   tbody.innerHTML = '';
-  resources.forEach(resource => {
+  window.resources.forEach(resource => {
     tbody.appendChild(createResourceRow(resource));
   });
 }
@@ -40,15 +37,13 @@ async function handleAddResource(event) {
       body:    JSON.stringify({ id: editingId, title, description, link }),
     });
     const data = await res.json();
-
     if (data.success) {
-      resources = resources.map(r =>
+      window.resources = window.resources.map(r =>
         r.id == editingId ? { id: editingId, title, description, link } : r
       );
       exitEditMode();
       renderTable();
     }
-
   } else {
     const res  = await fetch('./api/index.php', {
       method:  'POST',
@@ -56,9 +51,8 @@ async function handleAddResource(event) {
       body:    JSON.stringify({ title, description, link }),
     });
     const data = await res.json();
-
     if (data.success) {
-      resources.push({ id: data.id, title, description, link });
+      window.resources.push({ id: data.id, title, description, link });
       renderTable();
     }
   }
@@ -75,7 +69,7 @@ function handleTableClick(event) {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          resources = resources.filter(r => r.id != id);
+          window.resources = window.resources.filter(r => r.id != id);
           renderTable();
         }
       });
@@ -83,7 +77,7 @@ function handleTableClick(event) {
 
   if (target.classList.contains('edit-btn')) {
     const id       = target.dataset.id;
-    const resource = resources.find(r => r.id == id);
+    const resource = window.resources.find(r => r.id == id);
     if (!resource) return;
 
     document.querySelector('#resource-title').value       = resource.title;
@@ -104,15 +98,12 @@ function exitEditMode() {
 async function loadAndInitialize() {
   const res  = await fetch('./api/index.php');
   const data = await res.json();
-
   if (data.success) {
-    resources = data.data;
+    window.resources = data.data;
     renderTable();
   }
-
   document.querySelector('#resource-form').addEventListener('submit', handleAddResource);
   document.querySelector('#resources-tbody').addEventListener('click', handleTableClick);
 }
 
-// --- Initial Page Load ---
 loadAndInitialize();
