@@ -24,7 +24,8 @@ function renderTable() {
     resourcesTbody.innerHTML = "";
 
     resources.forEach(function (resource) {
-        resourcesTbody.appendChild(createResourceRow(resource));
+        const row = createResourceRow(resource);
+        resourcesTbody.appendChild(row);
     });
 }
 
@@ -39,18 +40,20 @@ async function handleAddResource(event) {
     if (editId !== null) {
         const response = await fetch("./api/index.php", {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             body: JSON.stringify({ id: editId, title, description, link })
         });
 
         const result = await response.json();
 
         if (result.success) {
-            resources = resources.map(function (resource) {
-                if (String(resource.id) === String(editId)) {
+            resources = resources.map(function (r) {
+                if (String(r.id) === String(editId)) {
                     return { id: editId, title, description, link };
                 }
-                return resource;
+                return r;
             });
 
             editId = null;
@@ -64,7 +67,9 @@ async function handleAddResource(event) {
 
     const response = await fetch("./api/index.php", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+            "Content-Type": "application/json"
+        },
         body: JSON.stringify({ title, description, link })
     });
 
@@ -84,6 +89,7 @@ async function handleAddResource(event) {
 }
 
 async function handleTableClick(event) {
+
     if (event.target.classList.contains("delete-btn")) {
         const id = event.target.dataset.id;
 
@@ -94,8 +100,8 @@ async function handleTableClick(event) {
         const result = await response.json();
 
         if (result.success) {
-            resources = resources.filter(function (resource) {
-                return String(resource.id) !== String(id);
+            resources = resources.filter(function (r) {
+                return String(r.id) !== String(id);
             });
 
             renderTable();
@@ -105,8 +111,8 @@ async function handleTableClick(event) {
     if (event.target.classList.contains("edit-btn")) {
         const id = event.target.dataset.id;
 
-        const resource = resources.find(function (resource) {
-            return String(resource.id) === String(id);
+        const resource = resources.find(function (r) {
+            return String(r.id) === String(id);
         });
 
         if (resource) {
