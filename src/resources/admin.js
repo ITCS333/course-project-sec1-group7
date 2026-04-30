@@ -1,8 +1,7 @@
-let resources = [];
-let editId = null;
+var resources = [];
+var editId = null;
 
 const resourceForm = document.querySelector("#resource-form");
-const resourcesTbody = document.querySelector("#resources-tbody");
 
 function createResourceRow(resource) {
   const row = document.createElement("tr");
@@ -21,13 +20,12 @@ function createResourceRow(resource) {
 }
 
 function renderTable() {
-  const tbody = document.querySelector("#resources-tbody");
+  const resourcesTbody = document.querySelector("#resources-tbody");
 
-  tbody.innerHTML = "";
+  resourcesTbody.innerHTML = "";
 
   resources.forEach(function (resource) {
-    const row = createResourceRow(resource);
-    tbody.appendChild(row);
+    resourcesTbody.appendChild(createResourceRow(resource));
   });
 }
 
@@ -51,9 +49,10 @@ async function handleAddResource(event) {
   if (result.success) {
     if (editId) {
       resources = resources.map(function (resource) {
-        return String(resource.id) === String(editId)
-          ? { id: editId, title, description, link }
-          : resource;
+        if (String(resource.id) === String(editId)) {
+          return { id: editId, title, description, link };
+        }
+        return resource;
       });
 
       editId = null;
@@ -62,9 +61,8 @@ async function handleAddResource(event) {
       resources.push({ id: result.id, title, description, link });
     }
 
-    window.resources = resources;
     renderTable();
-    resourceForm.reset();
+    document.querySelector("#resource-form").reset();
   }
 }
 
@@ -83,7 +81,6 @@ async function handleTableClick(event) {
         return String(resource.id) !== String(id);
       });
 
-      window.resources = resources;
       renderTable();
     }
   }
@@ -111,12 +108,11 @@ async function loadAndInitialize() {
   const result = await response.json();
 
   resources = result.data || [];
-  window.resources = resources;
 
   renderTable();
 
-  resourceForm.addEventListener("submit", handleAddResource);
-  resourcesTbody.addEventListener("click", handleTableClick);
+  document.querySelector("#resource-form").addEventListener("submit", handleAddResource);
+  document.querySelector("#resources-tbody").addEventListener("click", handleTableClick);
 }
 
 loadAndInitialize();
