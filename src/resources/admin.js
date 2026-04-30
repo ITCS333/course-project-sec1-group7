@@ -1,14 +1,6 @@
-/*
-  Requirement: Make the "Manage Resources" page interactive.
-*/
-
 // --- Global Data Store ---
 let resources = [];
-let editingId = null; // tracks which resource is being edited (null = add mode)
-
-// --- Element Selections ---
-const resourceForm = document.querySelector('#resource-form');
-const resourcesTbody = document.querySelector('#resources-tbody');
+let editingId = null;
 
 // --- Functions ---
 
@@ -27,9 +19,10 @@ function createResourceRow({ id, title, description, link }) {
 }
 
 function renderTable() {
-  resourcesTbody.innerHTML = '';
+  const tbody = document.querySelector('#resources-tbody');
+  tbody.innerHTML = '';
   resources.forEach(resource => {
-    resourcesTbody.appendChild(createResourceRow(resource));
+    tbody.appendChild(createResourceRow(resource));
   });
 }
 
@@ -41,7 +34,6 @@ async function handleAddResource(event) {
   const link        = document.querySelector('#resource-link').value.trim();
 
   if (editingId !== null) {
-    // --- PUT (update existing) ---
     const res  = await fetch('./api/index.php', {
       method:  'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -58,7 +50,6 @@ async function handleAddResource(event) {
     }
 
   } else {
-    // --- POST (add new) ---
     const res  = await fetch('./api/index.php', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -72,13 +63,12 @@ async function handleAddResource(event) {
     }
   }
 
-  resourceForm.reset();
+  document.querySelector('#resource-form').reset();
 }
 
 function handleTableClick(event) {
   const target = event.target;
 
-  // --- DELETE ---
   if (target.classList.contains('delete-btn')) {
     const id = target.dataset.id;
     fetch(`./api/index.php?id=${id}`, { method: 'DELETE' })
@@ -91,18 +81,15 @@ function handleTableClick(event) {
       });
   }
 
-  // --- EDIT ---
   if (target.classList.contains('edit-btn')) {
     const id       = target.dataset.id;
     const resource = resources.find(r => r.id == id);
     if (!resource) return;
 
-    // Populate form with existing values
     document.querySelector('#resource-title').value       = resource.title;
     document.querySelector('#resource-description').value = resource.description;
     document.querySelector('#resource-link').value        = resource.link;
 
-    // Switch to edit mode
     editingId = resource.id;
     document.querySelector('#add-resource').textContent = 'Update Resource';
   }
@@ -111,7 +98,7 @@ function handleTableClick(event) {
 function exitEditMode() {
   editingId = null;
   document.querySelector('#add-resource').textContent = 'Add Resource';
-  resourceForm.reset();
+  document.querySelector('#resource-form').reset();
 }
 
 async function loadAndInitialize() {
@@ -123,8 +110,8 @@ async function loadAndInitialize() {
     renderTable();
   }
 
-  resourceForm.addEventListener('submit', handleAddResource);
-  resourcesTbody.addEventListener('click', handleTableClick);
+  document.querySelector('#resource-form').addEventListener('submit', handleAddResource);
+  document.querySelector('#resources-tbody').addEventListener('click', handleTableClick);
 }
 
 // --- Initial Page Load ---
