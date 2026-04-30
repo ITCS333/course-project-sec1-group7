@@ -1,136 +1,120 @@
-var resources = [];
-var editId = null;
+let resources = [];
+let editId = null;
 
 const resourceForm = document.querySelector("#resource-form");
 const resourcesTbody = document.querySelector("#resources-tbody");
 
 function createResourceRow(resource) {
-    const tr = document.createElement("tr");
+  const row = document.createElement("tr");
 
-    tr.innerHTML = `
-        <td>${resource.title}</td>
-        <td>${resource.description}</td>
-        <td>${resource.link}</td>
-        <td>
-            <button class="edit-btn" data-id="${resource.id}">Edit</button>
-            <button class="delete-btn" data-id="${resource.id}">Delete</button>
-        </td>
-    `;
+  row.innerHTML = `
+    <td>${resource.title}</td>
+    <td>${resource.description}</td>
+    <td>${resource.link}</td>
+    <td>
+      <button class="edit-btn" data-id="${resource.id}">Edit</button>
+      <button class="delete-btn" data-id="${resource.id}">Delete</button>
+    </td>
+  `;
 
-    return tr;
+  return row;
 }
 
 function renderTable() {
-    resourcesTbody.innerHTML = "";
+  resourcesTbody.innerHTML = "";
 
-    resources.forEach(function (resource) {
-        const row = createResourceRow(resource);
-        resourcesTbody.appendChild(row);
-    });
+  window.resources.forEach(function (resource) {
+    const row = createResourceRow(resource);
+    resourcesTbody.appendChild(row);
+  });
 }
 
 async function handleAddResource(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const title = document.querySelector("#resource-title").value;
-    const description = document.querySelector("#resource-description").value;
-    const link = document.querySelector("#resource-link").value;
-    const submitButton = document.querySelector("#add-resource");
+  const title = document.querySelector("#resource-title").value;
+  const description = document.querySelector("#resource-description").value;
+  const link = document.querySelector("#resource-link").value;
 
-    if (editId !== null) {
-        const response = await fetch("./api/index.php", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id: editId, title, description, link })
-        });
+  const response = await fetch("./api/index.php", {
+    method: editId ? "PUT" : "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(
+      editId ? { id: editId, title, description, link } : { title, description, link }
+    )
+  });
 
-        const result = await response.json();
+  const result = await response.json();
 
-        if (result.success) {
-            resources = resources.map(function (resource) {
-                if (String(resource.id) === String(editId)) {
-                    return { id: editId, title, description, link };
-                }
-                return resource;
-            });
+  if (result.success) {
+    if (editId) {
+      resources = resources.map(function (resource) {
+        return String(resource.id) === String(editId)
+          ? { id: editId, title, description, link }
+          : resource;
+      });
 
-            editId = null;
-            submitButton.textContent = "Add Resource";
-            resourceForm.reset();
-            renderTable();
-        }
-
-        return;
+      editId = null;
+      document.querySelector("#add-resource").textContent = "Add Resource";
+    } else {
+      resources.push({ id: result.id, title, description, link });
     }
 
-    const response = await fetch("./api/index.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, link })
+    window.resources = resources;
+    renderTable();
+    resourceForm.reset();
+  }
+}
+
+async function handleTableClick(event) {
+  if (event.target.classList.contains("delete-btn")) {
+    const id = event.target.dataset.id;
+
+    const response = await fetch(`./api/index.php?id=${id}`, {
+      method: "DELETE"
     });
 
     const result = await response.json();
 
     if (result.success) {
-        resources.push({
-            id: result.id,
-            title,
-            description,
-            link
-        });
+      resources = resources.filter(function (resource) {
+        return String(resource.id) !== String(id);
+      });
 
-        renderTable();
-        resourceForm.reset();
+      window.resources = resources;
+      renderTable();
     }
-}
+  }
 
-async function handleTableClick(event) {
-    if (event.target.classList.contains("delete-btn")) {
-        const id = event.target.dataset.id;
+  if (event.target.classList.contains("edit-btn")) {
+    const id = event.target.dataset.id;
 
-        const response = await fetch(`./api/index.php?id=${id}`, {
-            method: "DELETE"
-        });
+    const resource = resources.find(function (resource) {
+      return String(resource.id) === String(id);
+    });
 
-        const result = await response.json();
+    if (resource) {
+      document.querySelector("#resource-title").value = resource.title;
+      document.querySelector("#resource-description").value = resource.description;
+      document.querySelector("#resource-link").value = resource.link;
 
-        if (result.success) {
-            resources = resources.filter(function (resource) {
-                return String(resource.id) !== String(id);
-            });
-
-            renderTable();
-        }
+      editId = id;
+      document.querySelector("#add-resource").textContent = "Update Resource";
     }
-
-    if (event.target.classList.contains("edit-btn")) {
-        const id = event.target.dataset.id;
-
-        const resource = resources.find(function (resource) {
-            return String(resource.id) === String(id);
-        });
-
-        if (resource) {
-            document.querySelector("#resource-title").value = resource.title;
-            document.querySelector("#resource-description").value = resource.description;
-            document.querySelector("#resource-link").value = resource.link;
-
-            editId = id;
-            document.querySelector("#add-resource").textContent = "Update Resource";
-        }
-    }
+  }
 }
 
 async function loadAndInitialize() {
-    const response = await fetch("./api/index.php");
-    const result = await response.json();
+  const response = await fetch("./api/index.php");
+  const result = await response.json();
 
-    resources = result.data || [];
+  resources = result.data || [];
+  window.resources = resources;
 
-    renderTable();
+  renderTable();
 
-    resourceForm.addEventListener("submit", handleAddResource);
-    resourcesTbody.addEventListener("click", handleTableClick);
+  resourceForm.addEventListener("submit", handleAddResource);
+  resourcesTbody.addEventListener("click", handleTableClick);
 }
 
 loadAndInitialize();
