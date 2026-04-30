@@ -21,11 +21,13 @@ function createResourceRow(resource) {
 }
 
 function renderTable() {
-  resourcesTbody.innerHTML = "";
+  const tbody = document.querySelector("#resources-tbody");
 
-  window.resources.forEach(function (resource) {
+  tbody.innerHTML = "";
+
+  resources.forEach(function (resource) {
     const row = createResourceRow(resource);
-    resourcesTbody.appendChild(row);
+    tbody.appendChild(row);
   });
 }
 
