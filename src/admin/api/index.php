@@ -292,7 +292,7 @@ try {
  *                          On error, pass a string message.
  * @param int   $statusCode HTTP status code (default 200).
  */
-function sendResponse($data, $statusCode = 200) {
+function sendResponse(array $data, $statusCode = 200) {
     // TODO: Call http_response_code($statusCode).
 
     // TODO: If $statusCode indicates success (< 400), echo:
@@ -301,6 +301,7 @@ function sendResponse($data, $statusCode = 200) {
     //         json_encode(['success' => false, 'message' => $data])
 
     // TODO: Call exit to stop further execution.
+    
 }
 
 

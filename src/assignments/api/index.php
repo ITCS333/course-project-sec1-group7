@@ -164,7 +164,7 @@ function getAllAssignments(PDO $db): void
 
     
     if(!empty ($_GET['search'])){
-        $query .= "WHERE title LIKE :search OR description LIKE :search";
+        $query .= " WHERE title LIKE :search OR description LIKE :search";
         $params[':search'] = "%" . $_GET['search'] . "%";
     }
 
@@ -221,7 +221,7 @@ function getAssignmentById(PDO $db, $id): void
     // TODO: Fetch one row. Decode the files JSON:
     // $assignment['files'] = json_decode($assignment['files'], true) ?? [];
 
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    $assignment = $stmt->fetch(PDO::FETCH_ASSOC);
     // TODO: If found, sendResponse success with the assignment.
     // If not found, sendResponse error with HTTP 404.
     if(!$assignment){
@@ -395,11 +395,11 @@ function updateAssignment(PDO $db, array $data): void
 
     $values[]=$id;
 
-    $sql = "UPDATE assignments SET " . implode(", ", $fields) . "WHERE id = ?";
+    $sql = "UPDATE assignments SET " . implode(", ", $fields) . " WHERE id = ?";
     $stmt = $db->prepare($sql);
 
     if($stmt->execute($values)){
-        sendResponse(["success"=true],200);
+        sendResponse(["success"=>true],200);
     }
 
     sendResponse(["success"=>false,"message"=>"Update failed"],500);
@@ -484,7 +484,7 @@ function getCommentsByAssignment(PDO $db, $assignmentId): void
         sendResponse(["success"=>false,"message"=>"Invalid assignment ID"],400);
     }
 
-    $stmt = $dn-prepare("SELECT id,assignment_id,author,text,created_at FROM comments_assignment
+    $stmt = $db->prepare("SELECT id,assignment_id,author,text,created_at FROM comments_assignment
         WHERE assignment_id = ? ORDER BY created_at ASC");
     
     $stmt->execute([$assignmentId]);
@@ -682,7 +682,7 @@ function sendResponse(array $data, int $statusCode = 200): void
     // TODO: echo json_encode($data, JSON_PRETTY_PRINT);
     // TODO: exit;
 
-    http_response_code($status);
+    http_response_code($statusCode);
     echo json_encode($data);
     exit();
 }
