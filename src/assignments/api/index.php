@@ -100,7 +100,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 // $rawData = file_get_contents('php://input');
 // $data    = json_decode($rawData, true) ?? [];
 
-$rawData = file_get_contents('php://imput');
+$rawData = file_get_contents('php://input');
 $data = json_decode($rawData, true) ?? [];
 
 
@@ -159,12 +159,12 @@ function getAllAssignments(PDO $db): void
 
     // TODO: Call sendResponse(['success' => true, 'data' => $assignments]);
 
-    $query = "SELECT id, title, description, due_date, files, created_at, updated_at FROM assignmnets";
+    $query = "SELECT id, title, description, due_date, files, created_at, updated_at FROM assignments";
     $params = [];
 
     
     if(!empty ($_GET['search'])){
-        $query .= "WHERE title LIKE : search OR description LIKE : search";
+        $query .= "WHERE title LIKE :search OR description LIKE :search";
         $params[':search'] = "%" . $_GET['search'] . "%";
     }
 
