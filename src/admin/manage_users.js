@@ -117,9 +117,13 @@ function renderTable(userArray = users) {
 async function handleChangePassword(event) {
   event.preventDefault();
 
-  const currentPassword = document.getElementById("current-password").value;
-  const newPassword = document.getElementById("new-password").value;
-  const confirmPassword = document.getElementById("confirm-password").value;
+  const currentPasswordInput = document.getElementById("current-password");
+  const newPasswordInput = document.getElementById("new-password");
+  const confirmPasswordInput = document.getElementById("confirm-password");
+
+  const currentPassword = currentPasswordInput.value;
+  const newPassword = newPasswordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
 
   if (newPassword !== confirmPassword) {
     alert("Passwords do not match.");
@@ -130,6 +134,10 @@ async function handleChangePassword(event) {
     alert("Password must be at least 8 characters.");
     return;
   }
+
+  currentPasswordInput.value = "";
+  newPasswordInput.value = "";
+  confirmPasswordInput.value = "";
 
   const id = 1;
 
@@ -149,7 +157,6 @@ async function handleChangePassword(event) {
 
   if (result.success) {
     alert("Password updated successfully!");
-    changePasswordForm.reset();
   } else {
     alert(result.message);
   }
