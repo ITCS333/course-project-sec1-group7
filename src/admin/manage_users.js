@@ -13,20 +13,26 @@
 // This array will be populated with data fetched from the PHP API.
 // It acts as a client-side cache so search and sort work without extra network calls.
 let users = [];
+let listenersAdded = false;
 
 // --- Element Selections ---
 // We can safely select elements here because 'defer' guarantees
 // the HTML document is parsed before this script runs.
 
 // TODO: Select the user table body element with id="user-table-body".
+const userTableBody = document.getElementById("user-table-body");
 
 // TODO: Select the "Add User" form with id="add-user-form".
+const addUserForm = document.getElementById("add-user-form");
 
 // TODO: Select the "Change Password" form with id="password-form".
+const changePasswordForm = document.getElementById("password-form");
 
 // TODO: Select the search input field with id="search-input".
+const searchInput = document.getElementById("search-input");
 
 // TODO: Select all table header (th) elements inside the thead of id="user-table".
+const tableHeaders = document.querySelectorAll("#user-table thead th");
 
 // --- Functions ---
 
@@ -42,7 +48,38 @@ let users = [];
  *    - A "Delete" button with class "delete-btn" and a data-id attribute set to the user's id.
  */
 function createUserRow(user) {
-  // ... your implementation here ...
+  const tr = document.createElement("tr");
+
+  const nameTd = document.createElement("td");
+  nameTd.textContent = user.name;
+
+  const emailTd = document.createElement("td");
+  emailTd.textContent = user.email;
+
+  const adminTd = document.createElement("td");
+  adminTd.textContent = Number(user.is_admin) === 1 ? "Yes" : "No";
+
+  const actionTd = document.createElement("td");
+
+  const editBtn = document.createElement("button");
+  editBtn.textContent = "Edit";
+  editBtn.className = "edit-btn";
+  editBtn.dataset.id = user.id;
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.className = "delete-btn";
+  deleteBtn.dataset.id = user.id;
+
+  actionTd.appendChild(editBtn);
+  actionTd.appendChild(deleteBtn);
+
+  tr.appendChild(nameTd);
+  tr.appendChild(emailTd);
+  tr.appendChild(adminTd);
+  tr.appendChild(actionTd);
+
+  return tr;
 }
 
 /**
@@ -53,8 +90,13 @@ function createUserRow(user) {
  * 2. Loop through the provided array of users.
  * 3. For each user, call createUserRow and append the returned <tr> to userTableBody.
  */
-function renderTable(userArray) {
-  // ... your implementation here ...
+function renderTable(userArray = users) {
+  userTableBody.innerHTML = "";
+
+  userArray.forEach(function(user) {
+    const row = createUserRow(user);
+    userTableBody.appendChild(row);
+  });
 }
 
 /**
@@ -72,8 +114,45 @@ function renderTable(userArray) {
  * 5. On success, show an alert: "Password updated successfully!" and clear all three inputs.
  * 6. On failure, show the error message returned by the API.
  */
-function handleChangePassword(event) {
-  // ... your implementation here ...
+async function handleChangePassword(event) {
+  event.preventDefault();
+
+  const currentPassword = document.getElementById("current-password").value;
+  const newPassword = document.getElementById("new-password").value;
+  const confirmPassword = document.getElementById("confirm-password").value;
+
+  if (newPassword !== confirmPassword) {
+    alert("Passwords do not match.");
+    return;
+  }
+
+  if (newPassword.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+
+  const id = 1;
+
+  const response = await fetch("../api/index.php?action=change_password", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id: id,
+      current_password: currentPassword,
+      new_password: newPassword
+    })
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    alert("Password updated successfully!");
+    changePasswordForm.reset();
+  } else {
+    alert(result.message);
+  }
 }
 
 /**
@@ -92,8 +171,45 @@ function handleChangePassword(event) {
  * 6. Clear the form inputs on success.
  * 7. On failure, show the error message returned by the API.
  */
-function handleAddUser(event) {
-  // ... your implementation here ...
+async function handleAddUser(event) {
+  event.preventDefault();
+
+  const name = document.getElementById("user-name").value.trim();
+  const email = document.getElementById("user-email").value.trim();
+  const password = document.getElementById("default-password").value;
+  const isAdmin = document.getElementById("is-admin").value;
+
+  if (name === "" || email === "" || password === "") {
+    alert("Please fill out all required fields.");
+    return;
+  }
+
+  if (password.length < 8) {
+    alert("Password must be at least 8 characters.");
+    return;
+  }
+
+  const response = await fetch("../api/index.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      name: name,
+      email: email,
+      password: password,
+      is_admin: Number(isAdmin)
+    })
+  });
+
+  const result = await response.json();
+
+  if (result.success) {
+    addUserForm.reset();
+    loadUsersAndInitialize();
+  } else {
+    alert(result.message);
+  }
 }
 
 /**
@@ -111,8 +227,82 @@ function handleAddUser(event) {
  *    - (Optional) Populate an edit form or prompt with the user's current data
  *      and send a PUT request to '../api/index.php' with the updated fields.
  */
-function handleTableClick(event) {
-  // ... your implementation here ...
+async function handleTableClick(event) {
+  const target = event.target;
+
+  if (target.classList.contains("delete-btn")) {
+    const id = target.dataset.id;
+
+    const response = await fetch("../api/index.php?id=" + id, {
+      method: "DELETE"
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      users = users.filter(function(user) {
+        return String(user.id) !== String(id);
+      });
+
+      renderTable(users);
+    } else {
+      alert(result.message);
+    }
+  }
+
+  if (target.classList.contains("edit-btn")) {
+    const id = target.dataset.id;
+
+    const user = users.find(function(user) {
+      return String(user.id) === String(id);
+    });
+
+    if (!user) {
+      return;
+    }
+
+    const newName = prompt("Enter new name:", user.name);
+    const newEmail = prompt("Enter new email:", user.email);
+    const newAdmin = prompt("Enter admin status 0 or 1:", user.is_admin);
+
+    if (newName === null || newEmail === null || newAdmin === null) {
+      return;
+    }
+
+    const response = await fetch("../api/index.php", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id: id,
+        name: newName,
+        email: newEmail,
+        is_admin: Number(newAdmin)
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      users = users.map(function(user) {
+        if (String(user.id) === String(id)) {
+          return {
+            id: id,
+            name: newName,
+            email: newEmail,
+            is_admin: Number(newAdmin)
+          };
+        }
+
+        return user;
+      });
+
+      renderTable(users);
+    } else {
+      alert(result.message);
+    }
+  }
 }
 
 /**
@@ -127,7 +317,19 @@ function handleTableClick(event) {
  *    (This filters the client-side cache only; no extra API call is needed.)
  */
 function handleSearch(event) {
-  // ... your implementation here ...
+  const searchTerm = searchInput.value.toLowerCase();
+
+  if (searchTerm === "") {
+    renderTable(users);
+    return;
+  }
+
+  const filteredUsers = users.filter(function(user) {
+    return user.name.toLowerCase().includes(searchTerm) ||
+           user.email.toLowerCase().includes(searchTerm);
+  });
+
+  renderTable(filteredUsers);
 }
 
 /**
@@ -148,7 +350,41 @@ function handleSearch(event) {
  * 6. Call renderTable(users) to update the view.
  */
 function handleSort(event) {
-  // ... your implementation here ...
+  const index = event.currentTarget.cellIndex;
+  const fields = ["name", "email", "is_admin"];
+  const field = fields[index];
+
+  if (!field) {
+    return;
+  }
+
+  let direction = event.currentTarget.dataset.sortDir;
+
+  if (direction === "asc") {
+    direction = "desc";
+  } else {
+    direction = "asc";
+  }
+
+  event.currentTarget.dataset.sortDir = direction;
+
+  users.sort(function(a, b) {
+    let result;
+
+    if (field === "is_admin") {
+      result = Number(a[field]) - Number(b[field]);
+    } else {
+      result = a[field].localeCompare(b[field]);
+    }
+
+    if (direction === "desc") {
+      result = result * -1;
+    }
+
+    return result;
+  });
+
+  renderTable(users);
 }
 
 /**
@@ -169,7 +405,33 @@ function handleSort(event) {
  *    - "click"  on each th in tableHeaders -> handleSort
  */
 async function loadUsersAndInitialize() {
-  // ... your implementation here ...
+  const response = await fetch("../api/index.php");
+
+  if (!response.ok) {
+    console.error("Failed to load users");
+    alert("Failed to load users.");
+    return;
+  }
+
+  const result = await response.json();
+
+  if (result.success) {
+    users = result.data;
+    renderTable(users);
+  }
+
+  if (!listenersAdded) {
+    changePasswordForm.addEventListener("submit", handleChangePassword);
+    addUserForm.addEventListener("submit", handleAddUser);
+    userTableBody.addEventListener("click", handleTableClick);
+    searchInput.addEventListener("input", handleSearch);
+
+    tableHeaders.forEach(function(th) {
+      th.addEventListener("click", handleSort);
+    });
+
+    listenersAdded = true;
+  }
 }
 
 // --- Initial Page Load ---
